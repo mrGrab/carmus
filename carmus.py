@@ -1,5 +1,5 @@
 #!/usr/bin/python
- #coding: UTF-8
+#coding: UTF-8
 import sys, codecs, os
 
 from mutagen.mp3 import MP3
@@ -35,10 +35,9 @@ def enc(sym, coder, type):
 def converter (text):
 	c_type = ["CP1251", "CP1252", "ISO-8859-1","UTF-8","UTF-16","UTF-16BE", "KOI8-R"]
 	start = ["1","2","3","4","5","6","7","8","9","0",u' ',u'_']
+	test = 0
 	
 	sym = text[-1] if text[0] in start else text[0]
-	test = 0
-
 	for i in c_type:
 		if enc(sym, i, "e"):
 			for k in c_type:
@@ -47,66 +46,37 @@ def converter (text):
 					break
 			if test == 1:
 				break
-	return text.encode(i).decode(k) if test == 1 else None
+	return unicode(text).encode(i).decode(k) if test == 1 else None
 	
-def save_file(file_name, text=""):
-	fh = None
-	try:
-		fh = open(file_name, "w")
-		fh.write(text)
-	except EnvironmentError as err:
-		print("ERROR: failed to save {0}: {1}".format(file_name, err))
-		return True
-	else:
-		print("Saved {0} item{1} to {2}".format(len(text),
-			("s" if len(text) != 1 else ""), file_name))
-		return False
-	finally:
-		if fh is not None:
-			fh.close()
-	
-def get_id3_tag (file):
-	all = ""
-	if file.getall('TIT2'):
-		title = unicode(file['TIT2'])
-#		print title
-		all += title
-		
-#		for sym in title:
-#			if is_valid(sym):
-#				new_title=title
-#				break
-#			elif sym in ' 1234567890_-':
-#				pass
-#			else:
-#				code  = converter(sym)
-#				new_title=title.encode(code["ecode"]).decode(code["dcode"])
-#				break
-#			print sym
-#		print new_title
-#
-	else:
-		print ('no title')
+#Updating ID3 tags
+def update_tag (file, tags):
+	print tags['art']
 
+	
+#Getting id3 tags  from file
+def get_id3_tags (file):
+	tags = {'art':None, 'title':None}
+	title = ID3(file)['TIT2'].text[0] if ID3(file).getall('TIT2') else None
+	art = ID3(file)['TPE1'].text[0] if ID3(file).getall('TPE1') else None
+	
+	for key, text  in zip(tags.keys(), (art, title)):
+		if text is None or is_valid(text[0]):
+			pass
+		else:
+			text = converter(text)
+		tags[key] = text
+	print "art - ", tags['art']
+	print "titile - ", tags['title']
+	return (tags)
 
 def main ():
 	for i in range(1, len(sys.argv)):
-#		print ("{0:-^100}".format(sys.argv[i]))
+		print ("{0:-^100}".format(sys.argv[i]))
 		if MP3(sys.argv[i]).tags is None:
 			print ('No tags')
 		else:
-			file = ID3(sys.argv[i])
-			if file.getall('TIT2'):
-				title = file['TIT2'].text
-#				print "incoming text - ", title
-				print "goos at default - "+title[0] if is_valid (unicode(title[0][0])) else converter(unicode(title[0]))
-			else:
-				print "Looks like title is empty"
-			#title += file['TIT2']
-#			save_file ("ex.txt",title)
-#			print type(title)
-#			print ("title - ", title)
-#			print (MP3(sys.argv[i]).tags)
-#			get_id3_tag (ID3(sys.argv[i]))
-
+#			print ID3(sys.argv[i]).pprint()
+			update_tag (sys.argv[i], get_id3_tags (sys.argv[i]))
+			
+		
 main()
