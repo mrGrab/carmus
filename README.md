@@ -1,4 +1,4 @@
-------------------------------------  CarMus  ----------------------------
+------------------------------------  CarMus  ----------------------------\n
 My first try in Python and script for managing MP3 files.
 He automaticaly try to find correct encoding for ID3 tags.
 Also takes data for tags from file name if tags is empty or not even exist.
