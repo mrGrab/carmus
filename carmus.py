@@ -1,6 +1,6 @@
 #!/usr/bin/python3.3
 #coding: UTF-8
-import sys, codecs, os, shutil,optparse
+import sys, codecs, os, shutil,optparse, string
 
 from mutagenx.mp3 import MP3
 from mutagenx.id3  import ID3, TIT2, TPE1
@@ -22,16 +22,12 @@ alph = {u'юй': u'yuy', u'ей': u'yay', u'Юй': u'Yuy', u'Ей': u'Yay',
 
 #Check if symbol is readable in eng or cyr.
 def is_valid(sym):
-	en_alph = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 
-			'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 	cyr_alph =[u'А', u'Б', u'В', u'Г', u'Д', u'Е', u'Ё', u'Ж', u'З', u'И', u'Й', u'К', u'Л', u'М', u'Н', u'О', u'П', u'Р', u'С', u'Т', u'У', 
 			u'Ф', u'Х', u'Ц', u'Ч', u'Ш', u'Щ', u'Ъ', u'Ы', u'Ь', u'Э', u'Ю', u'Я', u'а', u'б', u'в', u'г', u'д', u'е', u'ё', u'ж', u'з', 
 			u'и', u'й', u'к', u'л', u'м', u'н', u'о', u'п', u'р', u'с', u'т', u'у', u'ф', u'х', u'ц', u'ч', u'ш', u'щ', u'ъ', u'ы', u'ь', 
 			u'э', u'ю', u'я', u'і', u'І', u'ї', u'Ї', u'є', u'Є']
-#	print sym
-	if sym in en_alph or sym in cyr_alph:
-#	if sym in alph.keys() or sym in alph.items():
-			return (True)
+	if sym in cyr_alph or sym in string.ascii_letters:
+		return (True)
 	else:
 		return (False)
 		
@@ -76,10 +72,15 @@ def enc(sym, coder, type):
 #Convert unicode text to readable format
 def converter (text):
 	c_type = ["CP1251", "CP1252", "ISO-8859-1","UTF-8","UTF-16","UTF-16BE", "KOI8-R"]
-	start = ["1","2","3","4","5","6","7","8","9","0",u' ',u'_']
 	test = 0
+
+	for sym in text:
+		if sym not in string.punctuation or sym not in string.digits:
+			break
+	else:
+#		print ("nothing for convert: ", text)
+		return (text)
 	
-	sym = text[-1] if text[0] in start else text[0]
 	for i in c_type:
 		if enc(sym, i, "e"):
 			for k in c_type:
@@ -92,57 +93,64 @@ def converter (text):
 	
 #Updating ID3 tags
 def update_tag (file, tags):
-	print (file, tags)
-	audio = ID3(file)
-	print ("was ---> ",audio['TIT2'].text[0])
-	audio.add(TIT2(encoding=3, text=tags['title']))
-	audio.add(TPE1(encoding=3, text=tags['art']))
-	audio.save()
-	print ("now ---> ",audio['TIT2'].text[0])
+#	print (file, tags)
+	audio = MP3(file)
+
+	t = ID3(file)['TIT2'].text[0] if MP3(file).tags and ID3(file).getall('TIT2') else None
+	a = ID3(file)['TPE1'].text[0] if MP3(file).tags and ID3(file).getall('TPE1') else None
+	print ("was ---> title:",t, " art:",a)
+	print ("new title -->:",tags['title'],"new art -->:", tags['art'])
+#	audio["TIT2"] = TIT2(encoding=3, text=tags['title']) 
+#	audio["TPE1"] = TPE1(encoding=3, text=tags['art'])
+#	audio.save()
+
+#	print ("Now ---> title:",ID3(file)['TIT2'].text[0], " art:", ID3(file)['TPE1'].text[0])
 
 	
 #Getting id3 tags  from file
-def get_id3_tags (file, convert=False, yes=True):
+def get_id3_tags (file, translate=False, yes=False):
 	tags = {'art':None, 'title':None}
 
 	title = ID3(file)['TIT2'].text[0] if MP3(file).tags and ID3(file).getall('TIT2') else None
 	art = ID3(file)['TPE1'].text[0] if MP3(file).tags and ID3(file).getall('TPE1') else None
-	
-	for key, text  in zip(tags.keys(), (art, title)):
-		if text is None or is_valid(text[0]):
-			pass
-		else:
-			text = converter(text)
-		tags[key] = translate(text, gaps=True) if convert and text is not None else text
 
-	if tags['art'] is None and tags['title'] is None:
-		confirm = []
-		while confirm  not in ("Y", "y", "yes", "YES" "Yes", "N", "n", "no", "No", "NO"):
-			ar = os.path.basename(file).partition("-")[0].strip().rstrip("_")
-			tit = os.path.basename(file).partition("-")[2][:-4].strip().lstrip("_")
-			message = "No tags. Takes data file-name:\""+ar+"\" and \""+tit+"\""
-			confirm = "Yes" if yes else get_response(message, default="Yes", min_len=1, max_len=3)
-			if confirm in ("Y", "y", "yes", "Yes", "YES"):
-				tags['art'] = ar
-				tags['title'] = tit
-				break
-			elif confirm in ("N", "n", "no", "No", "NO"):
-				break
-				
+	for key, text  in zip(('art','title'), (art, title)):
+#		print ("text: ", text, ", type: ", type(text),  is_valid(text[0]))
+		if text != None and is_valid(text[0]) is False:
+#			print ("for convert", text)
+			text = converter(text)
+		if text == None:
+			text = tags_from_name (file, key, True, yes)  
+		tags[key] = translator(text, gaps=True) if translate else text
 #	print ("art ---> ", tags['art'],": title --> ", tags['title'])
 	return (tags)
 
+def tags_from_name (file, tag, convert=False, yes=True):
+	file_name = get_file(file)
+	confirm = "Yes" if yes else []
+	while confirm  not in ("Y", "y", "yes", "YES" "Yes", "N", "n", "no", "No", "NO"):
+		if  tag =="art":
+			new_tag = file_name[1].partition("-")[0].strip().rstrip("_") if '-' in file_name[1] else file_name[1][:-4]
+		elif  tag =='title':
+			new_tag = file_name[1].partition("-")[2][:-4].strip().lstrip("_") if '-' in file_name[1] else file_name[1][:-4]
+		message = "No "+tag+". Takes data from file-name:\""+new_tag+"\""
+		confirm = "Yes" if yes else get_response(message, default="Yes", min_len=1, max_len=3)
+		if confirm in ("Y", "y", "yes", "Yes", "YES"):
+			return (new_tag)
+		elif confirm in ("N", "n", "no", "No", "NO"):
+			return ("-")
+
 #for converting cyr to translit
-def translate (text, gaps=True):
+def translator (text, gaps=True):
 	new_text = []
 #	print (text)
 	line = ''.join(text)
 	for i in line:
 		if i not in alph:
-			new_text.append(i) if gaps else new_text.append(i.replace(" ","_")) 
+			new_text.append(i.replace("_"," ")) if gaps else new_text.append(i.replace(" ","_")) 
 		else:
-			new_text.append(alph.get(i)) if gaps else new_text.append(alph.get(i.replace(" ","_")))
-	return("".join(new_text))
+			new_text.append(alph.get(i.replace("_"," "))) if gaps else new_text.append(alph.get(i.replace(" ","_")))
+	return(''.join(new_text))
 
 def get_file (path):
 	link = path if path.startswith("/") else os.getcwd()+"/"+path
@@ -187,20 +195,26 @@ def main ():
 	opts, args=parser.parse_args()
 	
 	if len(args) > 0:
-		for i in args:
-			file = get_file(i)
-#			print ("{0:-^100}".format(file[1]))
+		for arg in args:
+			file = get_file(arg)
+			print (" {0:-^100} ".format(file[1]))
 			if opts.convert and opts.update is False:
 				print ("Error flag \"-c, --convert\" should be used with \"-u, --update\" ")
 				break
 			if opts.update:
-#				print (i)
-#				print (MP3(i).pprint())
-				tags = get_id3_tags(i, opts.convert, opts.yes)
+#				print (MP3(arg).pprint())
+				tags = get_id3_tags(arg, opts.convert, opts.yes)
+				for k in tags.keys():
+					if tags[k].find("Track") != -1:
+						print ("Fount Track")
+						tags[k] = tags_from_name (file[1],k, convert=opts.convert, yes=opts.yes)
+					elif tags[k].find("(zaycev.net)") != -1:
+						print ("Found zaycev.net")
+						tags[k] = tags[k].replace("(zaycev.net)", "")
 #				print (tags)
-				update_tag (i, tags)
+				update_tag (arg, tags)
 			if opts.rename:
-				new_file = translate(file[1], False)
+				new_file = translator(file[1], False)
 #				print (file[1], new_file)
 				if new_file == file[1]:
 					print ('files are the same, nothing to do...{0}'.format(file[1]))
