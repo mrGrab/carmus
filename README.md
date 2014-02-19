@@ -1,5 +1,5 @@
 <h4 align=center> CarMus  </h4>
-<p align=center>My first try in Python and script for managing MP3 files.
+<p align=left>My first try in Python and script for managing MP3 files.
 He automaticaly try to find correct encoding for ID3 tags.
 <br>Also takes data for tags from file name if tags is empty or not even exist.
 And convert cyrillic text in file name and ID3 tags to translit.</p>
