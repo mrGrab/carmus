@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Carmus by mrGrab</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Carmus</h1>
+        <p>Script for encoding, decoding, updating ID3 tags, converting cyrillic to &quot;translit&quot;. And the same for file name.</p>
+
+        <p class="view"><a href="https://github.com/mrGrab/carmus">View the Project on GitHub <small>mrGrab/carmus</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/mrGrab/carmus/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/mrGrab/carmus/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/mrGrab/carmus">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <p>This is my first try in Python..  And it's for managing MP3 files for my car.
+Script automaticaly trying to find correct encoding for ID3 tags. Takes data for tags from file name (if tags is empty or not even exist). Now it updates only "TIT2" and "TPE1", as I do not need other...
+Also converts cyrillic text in file name and ID3 tags to translit.</p>
+
+<p><br>So, 
+<br>Usage: carmus.py [options] file_name
+</p><p></p>
+<br>Options:
+  <br>--version      show program's version number and exit
+  <br>-h, --help     show this help message and exit
+  <br>-b, --backup   do not remove original file
+  <br>-u, --update   update ID3 tags
+  <br>-c, --convert  convert all cyrillic text to translit
+  <br>-r, --rename   rename file in translit
+  <br>-y, --yes      automaticaly put "yes" in all dialogs
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/mrGrab">mrGrab</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
